@@ -1,11 +1,636 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Project Bangla OCR</title>
-  </head>
-  <body>
-    <h1>Project Bangla OCR</h1>
-  </body>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Bangla OCR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100vh; /* Use vh for viewport height */
+        }
+        
+        input, select, button {
+            -webkit-user-select: auto; /* Allow text selection in inputs */
+            user-select: auto;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        
+        .fade-out {
+            animation: fadeOut 0.3s ease-in forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+        
+        .bounce-in {
+            animation: bounceIn 0.6s ease-out forwards;
+        }
+        
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.1); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .mobile-input {
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        .camera-button {
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+            box-shadow: 0 8px 32px rgba(6, 182, 212, 0.3);
+            transition: transform 0.1s ease;
+        }
+        
+        .camera-button:active {
+            transform: scale(0.95);
+        }
+        
+        .progress-bar {
+            transition: width 0.4s ease;
+        }
+        
+        /* For iOS safe areas */
+        .status-bar {
+            height: env(safe-area-inset-top, 0px);
+        }
+        
+        .bottom-safe {
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        /* Ensure containers fill height */
+        .step-container {
+            height: 100%;
+        }
+        main {
+            height: calc(100% - 110px); /* Adjust based on header height */
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col">
+    <!-- Status Bar for Mobile -->
+    <div class="status-bar bg-gradient-to-r from-cyan-500 to-blue-500"></div>
+    
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-slate-100 px-6 py-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-bold text-sm">বা</span>
+                </div>
+                <h1 class="text-xl font-bold text-slate-800">Bangla OCR</h1>
+            </div>
+            <div class="flex items-center space-x-2">
+                <div class="text-right">
+                    <p class="text-sm font-semibold text-cyan-600" id="samples-count">0</p>
+                    <p class="text-xs text-slate-500">samples</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="mt-4">
+            <div class="flex justify-between text-xs text-slate-500 mb-2">
+                <span id="step-text">Getting Started</span>
+                <span id="step-counter">1/7</span>
+            </div>
+            <div class="h-1 bg-slate-200 rounded-full overflow-hidden">
+                <div id="progress-bar" class="progress-bar h-full bg-gradient-to-r from-cyan-500 to-blue-500 w-0"></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-hidden">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="step-container flex flex-col">
+            <div class="flex-1 px-6 py-8 flex items-center justify-center overflow-y-auto">
+                <div class="text-center">
+                    <div class="w-24 h-24 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full mx-auto mb-6 flex items-center justify-center bounce-in">
+                        <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253z"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-3xl font-bold text-slate-800 mb-3">Help Build Bangla OCR</h2>
+                    <p class="text-lg text-slate-600 mb-8 px-4">Your handwriting samples will help train AI to read Bangla text better.</p>
+                    
+                    <div class="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-2xl p-6 border border-cyan-100">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-6 h-6 text-cyan-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                            </svg>
+                            <div class="text-left">
+                                <h4 class="font-medium text-slate-800 mb-1">Anonymous & Secure</h4>
+                                <p class="text-sm text-slate-600">Your data is anonymized and used only for research.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-6 bg-white border-t border-slate-100 bottom-safe">
+                <button id="start-btn" class="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold py-4 rounded-2xl shadow-lg">
+                    Get Started
+                </button>
+            </div>
+        </div>
+
+        <!-- Age Input -->
+        <div id="age-screen" class="step-container hidden flex-col">
+            <div class="flex-1 px-6 py-12 flex items-center justify-center">
+                <div class="w-full max-w-sm text-center">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-slate-800 mb-3">What's your age?</h2>
+                        <p class="text-slate-600">This helps us understand our contributors.</p>
+                    </div>
+                    
+                    <div class="mb-8">
+                        <input type="number" id="age-input" min="5" max="100" 
+                               class="mobile-input text-center text-4xl font-bold w-full p-6 bg-white border-2 border-slate-200 rounded-3xl focus:ring-4 focus:ring-cyan-200 focus:border-cyan-500 shadow-lg" 
+                               placeholder="25" />
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-6 bg-white border-t border-slate-100 bottom-safe">
+                <button id="age-next" class="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold py-4 rounded-2xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Continue
+                </button>
+            </div>
+        </div>
+
+        <!-- Gender Selection -->
+        <div id="gender-screen" class="step-container hidden flex-col">
+            <div class="flex-1 px-6 py-12 flex items-center justify-center">
+                <div class="w-full max-w-sm text-center">
+                    <div class="mb-12">
+                        <h2 class="text-3xl font-bold text-slate-800 mb-3">Select your gender</h2>
+                        <p class="text-slate-600">Help us create a diverse dataset.</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <button class="gender-option w-full p-6 bg-white border-2 border-slate-200 rounded-2xl shadow-sm hover:border-cyan-500 hover:shadow-md transition-all" data-value="male">
+                            <div class="flex items-center justify-between">
+                                <span class="text-lg font-medium text-slate-800">Male</span>
+                                <div class="w-6 h-6 rounded-full border-2 border-slate-300"></div>
+                            </div>
+                        </button>
+                        <button class="gender-option w-full p-6 bg-white border-2 border-slate-200 rounded-2xl shadow-sm hover:border-cyan-500 hover:shadow-md transition-all" data-value="female">
+                            <div class="flex items-center justify-between">
+                                <span class="text-lg font-medium text-slate-800">Female</span>
+                                <div class="w-6 h-6 rounded-full border-2 border-slate-300"></div>
+                            </div>
+                        </button>
+                        <button class="gender-option w-full p-6 bg-white border-2 border-slate-200 rounded-2xl shadow-sm hover:border-cyan-500 hover:shadow-md transition-all" data-value="other">
+                            <div class="flex items-center justify-between">
+                                <span class="text-lg font-medium text-slate-800">Prefer not to say</span>
+                                <div class="w-6 h-6 rounded-full border-2 border-slate-300"></div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hand Selection -->
+        <div id="hand-screen" class="step-container hidden flex-col">
+            <div class="flex-1 px-6 py-12 flex items-center justify-center">
+                <div class="w-full max-w-sm text-center">
+                    <div class="mb-12">
+                        <h2 class="text-3xl font-bold text-slate-800 mb-3">Which hand do you write with?</h2>
+                        <p class="text-slate-600">This affects handwriting patterns.</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <button class="hand-option w-full p-6 bg-white border-2 border-slate-200 rounded-2xl shadow-sm hover:border-cyan-500 hover:shadow-md transition-all" data-value="left">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">✋</span>
+                                    <span class="text-lg font-medium text-slate-800">Left Hand</span>
+                                </div>
+                                <div class="w-6 h-6 rounded-full border-2 border-slate-300"></div>
+                            </div>
+                        </button>
+                        <button class="hand-option w-full p-6 bg-white border-2 border-slate-200 rounded-2xl shadow-sm hover:border-cyan-500 hover:shadow-md transition-all" data-value="right">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">🤚</span>
+                                    <span class="text-lg font-medium text-slate-800">Right Hand</span>
+                                </div>
+                                <div class="w-6 h-6 rounded-full border-2 border-slate-300"></div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Occupation Selection -->
+        <div id="occupation-screen" class="step-container hidden flex-col">
+            <div class="flex-1 px-6 py-12 flex items-center justify-center">
+                <div class="w-full max-w-sm text-center">
+                    <div class="mb-12">
+                        <h2 class="text-3xl font-bold text-slate-800 mb-3">What do you do?</h2>
+                        <p class="text-slate-600">Your occupation helps us understand our community.</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <button class="occupation-option w-full p-6 bg-white border-2 border-slate-200 rounded-2xl shadow-sm hover:border-cyan-500 hover:shadow-md transition-all" data-value="student">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">🎓</span>
+                                    <span class="text-lg font-medium text-slate-800">Student</span>
+                                </div>
+                                <div class="w-6 h-6 rounded-full border-2 border-slate-300"></div>
+                            </div>
+                        </button>
+                        <button class="occupation-option w-full p-6 bg-white border-2 border-slate-200 rounded-2xl shadow-sm hover:border-cyan-500 hover:shadow-md transition-all" data-value="employee">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">💼</span>
+                                    <span class="text-lg font-medium text-slate-800">Employee</span>
+                                </div>
+                                <div class="w-6 h-6 rounded-full border-2 border-slate-300"></div>
+                            </div>
+                        </button>
+                        <button class="occupation-option w-full p-6 bg-white border-2 border-slate-200 rounded-2xl shadow-sm hover:border-cyan-500 hover:shadow-md transition-all" data-value="other">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">👤</span>
+                                    <span class="text-lg font-medium text-slate-800">Other</span>
+                                </div>
+                                <div class="w-6 h-6 rounded-full border-2 border-slate-300"></div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Writing Prompt -->
+        <div id="prompt-screen" class="step-container hidden flex-col">
+            <div class="flex-1 px-6 py-8 flex items-center justify-center">
+                <div class="text-center">
+                    <div class="mb-8">
+                        <div class="w-16 h-16 bg-gradient-to-r from-orange-400 to-pink-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-slate-800 mb-2">Write This Text</h2>
+                        <p class="text-slate-600">Please write neatly on a plain white paper.</p>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-slate-800 to-slate-700 rounded-3xl p-8 mb-8 shadow-lg">
+                        <p class="text-3xl font-bold text-white leading-relaxed">
+                            আমার সোনার বাংলা, আমি তোমায় ভালোবাসি।
+                        </p>
+                    </div>
+                    
+                    <div class="bg-amber-50 rounded-2xl p-4 border border-amber-200">
+                        <div class="flex items-center space-x-3">
+                            <svg class="w-5 h-5 text-amber-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                            <p class="text-sm text-amber-800">Use a black pen for best results.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-6 bg-white border-t border-slate-100 bottom-safe">
+                <button id="written-btn" class="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold py-4 rounded-2xl shadow-lg">
+                    I've Written It
+                </button>
+            </div>
+        </div>
+
+        <!-- Camera/Upload -->
+        <div id="camera-screen" class="step-container hidden flex-col">
+            <!-- Camera Interface -->
+            <div id="camera-interface" class="h-full flex flex-col">
+                <div class="flex-1 bg-black relative flex items-center justify-center">
+                    <div class="text-center text-white">
+                        <div class="w-24 h-24 border-4 border-white rounded-full mx-auto mb-6 flex items-center justify-center">
+                            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Take a Photo</h3>
+                        <p class="text-gray-300 text-sm px-8">Make sure your handwriting is clear and well-lit.</p>
+                    </div>
+                    
+                    <input id="photoInput" type="file" accept="image/*" capture="environment" class="hidden" />
+                </div>
+                
+                <div class="bg-black px-6 py-8 bottom-safe">
+                    <div class="flex items-center justify-center">
+                        <button id="capture-btn" class="camera-button w-20 h-20 rounded-full flex items-center justify-center">
+                            <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M2 6a2 2 0 012-2h1.586a1 1 0 00.707-.293l1.414-1.414a1 1 0 011.414 0l1.414 1.414a1 1 0 00.707.293H16a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"></path>
+                                <path d="M10 14a4 4 0 100-8 4 4 0 000 8z"></path>
+                                <path d="M10 11a1 1 0 100-2 1 1 0 000 2z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Interface -->
+            <div id="preview-interface" class="h-full hidden flex-col">
+                <div class="flex-1 bg-black relative">
+                    <img id="previewImage" class="w-full h-full object-contain" src="" alt="Preview" />
+                </div>
+                
+                <div class="bg-white px-6 py-6 bottom-safe">
+                    <div class="flex space-x-4">
+                        <button id="retake-btn" class="flex-1 bg-gray-100 text-gray-800 font-semibold py-3 rounded-xl">
+                            Retake
+                        </button>
+                        <button id="submit-btn" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold py-3 rounded-xl">
+                            Submit
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Screen -->
+        <div id="success-screen" class="step-container hidden flex-col">
+            <div class="flex-1 flex items-center justify-center px-6">
+                <div class="text-center">
+                    <div class="w-24 h-24 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full mx-auto mb-6 flex items-center justify-center bounce-in">
+                        <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-3xl font-bold text-slate-800 mb-3">Thank You!</h2>
+                    <p class="text-lg text-slate-600 mb-8">Your contribution helps improve Bangla OCR for everyone.</p>
+                    
+                    <div class="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-2xl p-6 border border-cyan-100">
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-cyan-600" id="success-samples">0</p>
+                                <p class="text-sm text-slate-600">Total Samples</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-cyan-600" id="success-contributors">0</p>
+                                <p class="text-sm text-slate-600">Contributors</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-6 bg-white border-t border-slate-100 bottom-safe">
+                <button id="contribute-again-btn" class="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold py-4 rounded-2xl shadow-lg">
+                    Contribute Another Sample
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- STATE ---
+            let currentStep = 0;
+            let formData = {};
+
+            // --- DOM ELEMENTS ---
+            const elements = {
+                progressBar: document.getElementById('progress-bar'),
+                stepText: document.getElementById('step-text'),
+                stepCounter: document.getElementById('step-counter'),
+                samplesCount: document.getElementById('samples-count'),
+                startBtn: document.getElementById('start-btn'),
+                ageInput: document.getElementById('age-input'),
+                ageNext: document.getElementById('age-next'),
+                genderOptions: document.querySelectorAll('.gender-option'),
+                handOptions: document.querySelectorAll('.hand-option'),
+                occupationOptions: document.querySelectorAll('.occupation-option'),
+                writtenBtn: document.getElementById('written-btn'),
+                captureBtn: document.getElementById('capture-btn'),
+                photoInput: document.getElementById('photoInput'),
+                cameraInterface: document.getElementById('camera-interface'),
+                previewInterface: document.getElementById('preview-interface'),
+                previewImage: document.getElementById('previewImage'),
+                retakeBtn: document.getElementById('retake-btn'),
+                submitBtn: document.getElementById('submit-btn'),
+                contributeAgainBtn: document.getElementById('contribute-again-btn'),
+                successSamples: document.getElementById('success-samples'),
+                successContributors: document.getElementById('success-contributors')
+            };
+
+            // --- CONFIG ---
+            const screens = [
+                'welcome-screen', 'age-screen', 'gender-screen', 'hand-screen',
+                'occupation-screen', 'prompt-screen', 'camera-screen', 'success-screen'
+            ];
+
+            const stepConfig = [
+                { text: 'Welcome', progress: 0 },
+                { text: 'Your Age', progress: 14 },
+                { text: 'Your Gender', progress: 28 },
+                { text: 'Writing Hand', progress: 42 },
+                { text: 'Your Occupation', progress: 56 },
+                { text: 'Writing Task', progress: 70 },
+                { text: 'Upload Photo', progress: 85 },
+                { text: 'Complete!', progress: 100 }
+            ];
+
+            // --- FUNCTIONS ---
+
+            function updateStats() {
+                const samples = parseInt(localStorage.getItem('banglaOCR_samples') || 0);
+                const contributors = parseInt(localStorage.getItem('banglaOCR_contributors') || 0);
+                elements.samplesCount.textContent = samples;
+                elements.successSamples.textContent = samples;
+                elements.successContributors.textContent = contributors;
+            }
+
+            function showScreen(index) {
+                const oldScreen = document.querySelector('.step-container:not(.hidden)');
+                
+                const transitionEndHandler = () => {
+                    if(oldScreen) {
+                        oldScreen.classList.add('hidden');
+                        oldScreen.classList.remove('fade-out', 'flex');
+                    }
+                    const newScreen = document.getElementById(screens[index]);
+                    newScreen.classList.remove('hidden');
+                    newScreen.classList.add('flex', 'fade-in');
+                };
+
+                if (oldScreen) {
+                    oldScreen.classList.add('fade-out');
+                    setTimeout(transitionEndHandler, 300); // Match animation duration
+                } else {
+                    transitionEndHandler();
+                }
+
+                currentStep = index;
+                const config = stepConfig[index];
+                elements.stepText.textContent = config.text;
+                const totalProgressSteps = screens.length - 1;
+                elements.stepCounter.textContent = `${index}/${totalProgressSteps}`;
+                elements.progressBar.style.width = `${config.progress}%`;
+            }
+
+            function nextScreen() {
+                if (currentStep < screens.length - 1) {
+                    showScreen(currentStep + 1);
+                }
+            }
+            
+            function resetCamera() {
+                elements.photoInput.value = '';
+                elements.cameraInterface.classList.remove('hidden');
+                elements.cameraInterface.classList.add('flex');
+                elements.previewInterface.classList.add('hidden');
+                elements.previewInterface.classList.remove('flex');
+                elements.previewImage.src = '';
+            }
+
+            function handleFileSelect(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    elements.previewImage.src = e.target.result;
+                    elements.cameraInterface.classList.add('hidden');
+                    elements.cameraInterface.classList.remove('flex');
+                    elements.previewInterface.classList.remove('hidden');
+                    elements.previewInterface.classList.add('flex');
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            function handleSubmit() {
+                console.log("Submitting data:", formData);
+                console.log("Image file:", elements.photoInput.files[0]);
+
+                const samples = (parseInt(localStorage.getItem('banglaOCR_samples') || 0)) + 1;
+                localStorage.setItem('banglaOCR_samples', samples);
+                
+                if (!localStorage.getItem('banglaOCR_hasContributed')) {
+                    const contributors = (parseInt(localStorage.getItem('banglaOCR_contributors') || 0)) + 1;
+                    localStorage.setItem('banglaOCR_contributors', contributors);
+                    localStorage.setItem('banglaOCR_hasContributed', 'true');
+                }
+                
+                updateStats();
+                nextScreen(); // Move to success screen
+            }
+
+            // --- EVENT LISTENERS ---
+
+            elements.startBtn.addEventListener('click', nextScreen);
+
+            elements.ageInput.addEventListener('input', (e) => {
+                elements.ageNext.disabled = !e.target.value;
+            });
+
+            elements.ageNext.addEventListener('click', () => {
+                formData.age = elements.ageInput.value;
+                nextScreen();
+            });
+            
+            elements.genderOptions.forEach(button => {
+                button.addEventListener('click', () => {
+                    formData.gender = button.dataset.value;
+                    elements.genderOptions.forEach(btn => {
+                        btn.classList.remove('border-cyan-500', 'shadow-md');
+                        btn.querySelector('div > div').classList.remove('bg-cyan-500');
+                    });
+                    button.classList.add('border-cyan-500', 'shadow-md');
+                    button.querySelector('div > div').classList.add('bg-cyan-500');
+                    setTimeout(nextScreen, 250);
+                });
+            });
+
+            elements.handOptions.forEach(button => {
+                button.addEventListener('click', () => {
+                    formData.hand = button.dataset.value;
+                    elements.handOptions.forEach(btn => {
+                        btn.classList.remove('border-cyan-500', 'shadow-md');
+                        btn.querySelector('div > div:last-child').classList.remove('bg-cyan-500');
+                    });
+                    button.classList.add('border-cyan-500', 'shadow-md');
+                    button.querySelector('div > div:last-child').classList.add('bg-cyan-500');
+                    setTimeout(nextScreen, 250);
+                });
+            });
+
+            elements.occupationOptions.forEach(button => {
+                button.addEventListener('click', () => {
+                    formData.occupation = button.dataset.value;
+                    elements.occupationOptions.forEach(btn => {
+                        btn.classList.remove('border-cyan-500', 'shadow-md');
+                        btn.querySelector('div > div:last-child').classList.remove('bg-cyan-500');
+                    });
+                    button.classList.add('border-cyan-500', 'shadow-md');
+                    button.querySelector('div > div:last-child').classList.add('bg-cyan-500');
+                    setTimeout(nextScreen, 250);
+                });
+            });
+
+            elements.writtenBtn.addEventListener('click', nextScreen);
+
+            elements.captureBtn.addEventListener('click', () => elements.photoInput.click());
+
+            elements.photoInput.addEventListener('change', handleFileSelect);
+
+            elements.retakeBtn.addEventListener('click', resetCamera);
+
+            elements.submitBtn.addEventListener('click', handleSubmit);
+
+            elements.contributeAgainBtn.addEventListener('click', () => {
+                resetCamera();
+                showScreen(screens.indexOf('prompt-screen'));
+            });
+
+            // --- INITIALIZATION ---
+            function init() {
+                updateStats();
+                if (localStorage.getItem('banglaOCR_hasContributed')) {
+                    showScreen(screens.indexOf('prompt-screen'));
+                } else {
+                    showScreen(0);
+                }
+            }
+
+            init();
+        });
+    </script>
+</body>
 </html>

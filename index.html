@@ -147,14 +147,24 @@
   <body class="bg-gradient-to-br from-slate-50 to-blue-50">
     <div class="status-bar bg-gradient-to-r from-cyan-500 to-blue-500"></div>
 
-    <header
-      class="bg-white shadow-sm border-b border-slate-100 px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div
-          class="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
-          <span class="text-white font-bold text-sm">বা</span>
+    <!-- Header (Stays fixed at the top) -->
+    <header class="bg-white shadow-sm border-b border-slate-100 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div
+            class="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
+            <span class="text-white font-bold text-sm">বা</span>
+          </div>
+          <h1 class="text-xl font-bold text-slate-800">Bangla OCR</h1>
         </div>
-        <h1 class="text-xl font-bold text-slate-800">Project Bangla OCR</h1>
+        <div class="flex items-center space-x-2">
+          <div class="text-right">
+            <p class="text-sm font-semibold text-cyan-600" id="samples-count">
+              0
+            </p>
+            <p class="text-xs text-slate-500">samples</p>
+          </div>
+        </div>
       </div>
 
     </header>
